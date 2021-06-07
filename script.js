@@ -1,6 +1,10 @@
+//namespace
+const ballApp = {};
+
 //get canvas element
 const canvas = document.querySelector('canvas');
-console.log(gsap);
+const scoreEl = document.querySelector('#scoreEl');
+let score = 0;
 
 //change canvas size
 canvas.width = innerWidth;
@@ -74,6 +78,7 @@ class Enemy {
     }
 }
 
+const friction = 0.98;
 class Particles {
     constructor(x, y, radius, color, velocity) { //this is the constructor used to create the projectile
         this.x = x,
@@ -94,11 +99,13 @@ class Particles {
     }
     update() {
         this.draw();
-        this.x += this.velocity.x,
-            this.y += this.velocity.y
-        setTimeout(() => {
-            this.destroy();
-        }, 1000);
+        this.velocity.x *= friction;
+        this.velocity.y *= friction;
+        this.x += this.velocity.x;
+        this.y += this.velocity.y;
+        // setTimeout(() => {
+        //     this.destroy();
+        // }, 1000);
         this.alpha -= 0.01;
 
     }
@@ -113,29 +120,30 @@ class Particles {
     // }
 }
 
-
-
-
-
-
-
-
 const x = canvas.width / 2; //x at center of canvas width
 const y = canvas.height / 2; //y at center of canvas height.
-const player = new Player(x, y, 10, 'white');
+
+
 //create the player on screen
+let player = new Player(x, y, 10, 'white');
 
-// const projectile = new Projectile(canvas.width / 2, canvas.height / 2, 5, 'red', { x: 1, y: 1 });
-// const projectile2 = new Projectile(canvas.width / 2, canvas.height / 2, 5, 'red', { x: -1, y: 1 });
+let projectiles = []; //array that holds all the projectiles that are made
+let enemies = []; //enemies array that holds all the projectiles that are made
+let particles = []; //particles array that holds all the particles that are made
 
-const projectiles = []; //array that holds all the projectiles that are made
-const enemies = []; //enemies array that holds all the projectiles that are made
-const particles = []; //particles array that holds all the particles that are made
+ballApp.init = function () {
+    projectiles = []; //array that holds all the projectiles that are made
+    enemies = []; //enemies array that holds all the projectiles that are made
+    particles = []; //particles array that holds all the particles that are made
+    player = new Player(x, y, 10, 'white');
+    score = 0;
+    scoreEl.textContent = score;
+
+}
 
 function spawnEnemies() {
     setInterval(() => {
         const radius = (Math.random() * 30) + 4;
-
 
         let x, y;
 
@@ -197,6 +205,7 @@ function animate() { //used to animate
         const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y); //get distance between player and enemy
         if (dist - enemy.radius - player.radius < 1) { //if enemy reaches player cancel animation
             cancelAnimationFrame(animationId); //cancel animation
+            ballApp.gameOver();
 
         }
 
@@ -204,6 +213,7 @@ function animate() { //used to animate
             const dist = Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y); //get distance between projectile and enemy
             // console.log(dist);
             if (dist - enemy.radius - projectile.radius < 1) { //when projectiles touch enemy
+
                 //create explosion
                 for (let i = 0; i < enemy.radius * 2; i++) {
                     const velocity = (Math.random() * 6) + 1;
@@ -218,15 +228,20 @@ function animate() { //used to animate
 
                 setTimeout(() => {
                     if (enemy.radius - 5 > 10) { //shrink enemy on hit
+                        score += 50;
+                        scoreEl.textContent = score;
                         gsap.to(enemy, { //shrink enemy transition
                             radius: enemy.radius - 10
                         });
                         projectiles.splice(projectileIndex, 1);
                     } else { //remove enemy if it is too small
+                        score += 100;
+                        scoreEl.textContent = score;
                         enemies.splice(enemyIndex, 1); //remove enemy
                         projectiles.splice(projectileIndex, 1); //remove projectile
                     }
                 }, 0);
+
 
 
             }
@@ -248,5 +263,26 @@ addEventListener('click', (event) => { //event listener added to window
 
 });
 
-animate();
-spawnEnemies();
+ballApp.gameOver = function () {
+    document.querySelector('#modalScore').textContent = score;
+    document.querySelector('.modal').classList.toggle('hide');
+}
+
+// ballApp.startGame = function () {
+//     document.querySelector('.modal').classList.toggle('hide');
+//     ctx.clearRect(0, 0, canvas.width, canvas.height);
+//     setTimeout(() => {
+//         animate();
+//         spawnEnemies();
+//     }, 1000);
+
+// }
+
+
+ballApp.startGame = function () {
+    ballApp.init();
+    animate();
+    spawnEnemies();
+    document.querySelector('.modal').classList.toggle('hide');
+
+}
