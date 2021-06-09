@@ -21,13 +21,38 @@ class Player {
         this.x = x,
             this.y = y,
             this.radius = radius,
-            this.color = color
+            this.color = color,
+            this.friction = 0.99,
+            this.velocity = {
+                x: 0,
+                y: 0
+            }
     }
     draw() {//function used to draw the player onto the screen
         ctx.beginPath() //to let the context know we want to start drawing on the screen
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false); //arc function used to create a circle
         ctx.fillStyle = this.color; //change color of the circle
         ctx.fill() //create the circle on the screen
+    }
+    update() {
+        this.draw();
+        this.velocity.x *= this.friction;
+        this.velocity.y *= this.friction;
+
+        if (this.x - this.radius + this.velocity.x > 0 && this.x + this.radius + this.velocity.x < canvas.width) {
+            this.x += this.velocity.x;
+        } else {
+            this.velocity.x = 0;
+        }
+
+        if (this.y - this.radius + this.velocity.y > 0 && this.y + this.radius + this.velocity.y < canvas.height) {
+            this.y += this.velocity.y;
+        } else {
+            this.velocity.y = 0;
+        }
+
+
+        // this.y += this.velocity.y;
     }
 };
 
@@ -44,6 +69,7 @@ class Projectile {
     draw() {//function used to draw the projectile onto the screen
         ctx.beginPath() //to let the context know we want to start drawing on the screen
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false); //arc function used to create a circle
+        // ctx.rect(this.x, this.y, this.radius, this.radius);
         ctx.fillStyle = this.color; //change color of the circle
         ctx.fill() //create the circle on the screen
     }
@@ -63,15 +89,48 @@ class Enemy {
             this.y = y,
             this.radius = radius,
             this.color = color,
-            this.velocity = velocity
+            this.velocity = velocity,
+            this.type = 'regularEnemy'
     }
     draw() {//function used to draw the projectile onto the screen
         ctx.beginPath() //to let the context know we want to start drawing on the screen
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false); //arc function used to create a circle
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        // ctx.rect(this.x, this.y, this.radius, this.radius) //arc function used to create a circle
         ctx.fillStyle = this.color; //change color of the circle
         ctx.fill() //create the circle on the screen
     }
     update() {
+        this.draw();
+        this.x += this.velocity.x,
+            this.y += this.velocity.y
+    }
+}
+
+class squareEnemy {
+    constructor(x, y, radius, color, velocity) { //this is the constructor used to create the projectile
+        this.x = x,
+            this.y = y,
+            this.radius = radius,
+            this.color = color,
+            this.velocity = velocity,
+            this.amount = 5,
+            this.type = 'bigEnemy'
+    }
+    draw() {//function used to draw the projectile onto the screen
+        ctx.beginPath() //to let the context know we want to start drawing on the screen
+        // ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        // ctx.rect(this.x, this.y, this.radius, this.radius);
+        // ctx.scale(0.2, 0.2);
+        // ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = this.color; //change color of the circle
+        ctx.fill() //create the circle on the screen
+    }
+
+    update() {
+        if (this.radius < 0) {
+            this.radius = 5;
+        }
         this.draw();
         this.x += this.velocity.x,
             this.y += this.velocity.y
@@ -140,35 +199,99 @@ ballApp.init = function () {
     scoreEl.textContent = score;
 
 }
+let timer;
+function startSpawnTimer() {
+    timer = setInterval(() => {
+        spawnEnemies();
+    }, 2000);
+}
 
+//create enemies on the screen
 function spawnEnemies() {
-    setInterval(() => {
-        const radius = (Math.random() * 30) + 4;
 
-        let x, y;
+    const radius = (Math.random() * 30) + 8;
+    const squareSize = 100;
 
-        //conditional statements used to randomly generate enemy outside of the canvas
-        if (Math.random() < 0.5) {
-            x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
-            y = Math.random() * canvas.height;
-        } else {
-            x = Math.random() * canvas.width;
-            y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
-        }
-        const enemyColor = ['#e84545', '#30e3ca', '#e23e57', '#d6e6f2', '#07689f', '#00e0ff', '#fc5185', '#00adb5', '#f38181', '#aa96da', '#ff467e'];
+    // const spawnEnemyType = );
+    const spawnEnemyType = Math.floor(Math.random() * 50);
+    // console.log(spawnEnemyType);
 
-        // const x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
-        // const y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
-        const color = enemyColor[Math.floor(Math.random() * enemyColor.length)];
-        const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x);
-        const speed = (Math.random() * 2) + 1;
-        const velocity = {
-            x: Math.cos(angle) * speed,
-            y: Math.sin(angle) * speed
+    let x, y;
 
-        } //trig math used to find the angle at which you clicked and pass on to the below array
+    //conditional statements used to randomly generate enemy outside of the canvas
+
+
+    if (Math.random() < 0.5) {
+        x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
+        y = Math.random() * canvas.height;
+    } else {
+        x = Math.random() * canvas.width;
+        y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
+    }
+
+    const enemyColor = ['#e84545', '#30e3ca', '#e23e57', '#d6e6f2', '#07689f', '#00e0ff', '#fc5185', '#00adb5', '#f38181', '#aa96da', '#ff467e'];
+
+    // const x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
+    // const y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
+    const color = enemyColor[Math.floor(Math.random() * enemyColor.length)];
+    const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x);
+    const numbers = [46, 16];
+
+    let speed;
+    if (numbers.includes(spawnEnemyType)) {
+        speed = 0.15;
+    } else {
+        speed = (Math.random() * 2) + 1;
+    }
+    const velocity = {
+        x: Math.cos(angle) * speed,
+        y: Math.sin(angle) * speed
+
+    } //trig math used to find the angle at which you clicked and pass on to the below array
+
+    if (numbers.includes(spawnEnemyType)) {
+        enemies.push(new squareEnemy(x, y, squareSize, color, velocity));
+    } else {
         enemies.push(new Enemy(x, y, radius, color, velocity));
-    }, 1000);
+    }
+
+}
+
+
+
+function spawnBigEnemy(currentX = 0, currentY = 0, sizeOfBall) {
+    // const radius = (Math.random() * 30) + 4;
+    const radiusSize = sizeOfBall;
+
+    // const spawnEnemyType = Math.floor(Math.random() * 3);
+
+    // console.log(spawnEnemyType);
+
+    let x, y;
+
+    //conditional statements used to randomly generate enemy outside of the canvas
+
+    x = currentX;
+    y = currentY;
+
+    const enemyColor = ['#e84545', '#30e3ca', '#e23e57', '#d6e6f2', '#07689f', '#00e0ff', '#fc5185', '#00adb5', '#f38181', '#aa96da', '#ff467e'];
+
+    const color = enemyColor[Math.floor(Math.random() * enemyColor.length)];
+    const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x);
+
+    let speed = 0.15;
+
+
+    const velocity = {
+        x: Math.cos(angle) * speed,
+        y: Math.sin(angle) * speed
+
+    } //trig math used to find the angle at which you clicked and pass on to the below array
+
+
+    enemies.push(new squareEnemy(x, y, radiusSize, color, velocity));
+
+
 }
 
 let animationId;
@@ -177,7 +300,7 @@ function animate() { //used to animate
     animationId = requestAnimationFrame(animate); //constantly calls itself I believe
     ctx.fillStyle = 'rgba(0,0,0,0.1'; //transparent black background that gives all the shapes have a fade effect
     ctx.fillRect(0, 0, canvas.width, canvas.height); //clear the canvas by drawing over itself
-    player.draw(); //draw the player on screen
+    player.update(); //draw the player on screen
 
 
     particles.forEach((particle, index) => {
@@ -201,14 +324,16 @@ function animate() { //used to animate
     enemies.forEach((enemy, enemyIndex) => { //for all the projectiles in the array call the update function 
         enemy.update(); //update enemy position
 
-
+        //end game if enemy touches player
         const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y); //get distance between player and enemy
         if (dist - enemy.radius - player.radius < 1) { //if enemy reaches player cancel animation
             cancelAnimationFrame(animationId); //cancel animation
             ballApp.gameOver();
 
         }
+        //-----------------------------------
 
+        //for each projectile check where they are and do specific tasks
         projectiles.forEach((projectile, projectileIndex) => { //check where the enemies are
             const dist = Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y); //get distance between projectile and enemy
             // console.log(dist);
@@ -233,6 +358,13 @@ function animate() { //used to animate
                         gsap.to(enemy, { //shrink enemy transition
                             radius: enemy.radius - 10
                         });
+                        if (enemy.type === 'bigEnemy') {
+                            if ((enemy.radius - 25) < 10) {
+                                spawnBigEnemy(projectile.x, projectile.y + Math.random() * 50, 10);
+                            } else {
+                                spawnBigEnemy(projectile.x, projectile.y + Math.random() * 50, enemy.radius - 25);
+                            }
+                        }
                         projectiles.splice(projectileIndex, 1);
                     } else { //remove enemy if it is too small
                         score += 100;
@@ -266,6 +398,8 @@ addEventListener('click', (event) => { //event listener added to window
 ballApp.gameOver = function () {
     document.querySelector('#modalScore').textContent = score;
     document.querySelector('.modal').classList.toggle('hide');
+    clearInterval(timer);
+
 }
 
 // ballApp.startGame = function () {
@@ -282,7 +416,30 @@ ballApp.gameOver = function () {
 ballApp.startGame = function () {
     ballApp.init();
     animate();
-    spawnEnemies();
+    startSpawnTimer();
     document.querySelector('.modal').classList.toggle('hide');
 
 }
+
+addEventListener('keydown', (event) => {
+    // console.log(event);
+    switch (event.key) {
+        case 'w':
+        case 'ArrowUp':
+            player.velocity.y -= 1;
+            break;
+        case 'a':
+        case 'ArrowLeft':
+            player.velocity.x -= 1;
+            break;
+        case 's':
+        case 'ArrowDown':
+            player.velocity.y += 1;
+            break;
+        case 'd':
+        case 'ArrowRight':
+            player.velocity.x += 1;
+            break;
+    }
+
+});
