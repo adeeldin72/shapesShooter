@@ -90,7 +90,12 @@ class Enemy {
             this.radius = radius,
             this.color = color,
             this.velocity = velocity,
-            this.type = 'regularEnemy'
+            this.type = 'regularEnemy',
+            this.movementType = 'linear'
+
+        if (Math.random() < 0.25) {
+            this.movementType = 'homing';
+        }
     }
     draw() {//function used to draw the projectile onto the screen
         ctx.beginPath() //to let the context know we want to start drawing on the screen
@@ -101,8 +106,23 @@ class Enemy {
     }
     update() {
         this.draw();
-        this.x += this.velocity.x,
-            this.y += this.velocity.y
+        if (this.movementType === 'homing') {
+            //homing enemy movement
+            const angle = Math.atan2(player.y - this.y, player.x - this.x);
+
+
+            this.velocity = {
+                x: Math.cos(angle),
+                y: Math.sin(angle)
+            }
+
+            this.x += this.velocity.x,
+                this.y += this.velocity.y
+        } else {
+            //linear enemy movement
+            this.x += this.velocity.x,
+                this.y += this.velocity.y
+        }
     }
 }
 
@@ -132,8 +152,18 @@ class squareEnemy {
             this.radius = 5;
         }
         this.draw();
-        this.x += this.velocity.x,
-            this.y += this.velocity.y
+
+        const angle = Math.atan2(player.y - this.y, player.x - this.x);
+
+
+        this.velocity = {
+            x: Math.cos(angle),
+            y: Math.sin(angle)
+        }
+
+        this.x += this.velocity.x * 0.15,
+            this.y += this.velocity.y * 0.15
+
     }
 }
 
@@ -384,14 +414,14 @@ function animate() { //used to animate
 addEventListener('click', (event) => { //event listener added to window
     // console.log(event);
     // console.log(projectiles);
-    const angle = Math.atan2(event.clientY - canvas.height / 2, event.clientX - canvas.width / 2);
+    const angle = Math.atan2(event.clientY - player.y, event.clientX - player.x);
     const velocity = {
         x: Math.cos(angle) * 5,
         y: Math.sin(angle) * 5
 
     } //trig math used to find the angle at which you clicked and pass on to the below array
 
-    projectiles.push(new Projectile(canvas.width / 2, canvas.height / 2, 5, 'white', velocity)); //create a new projectile with the passed on values
+    projectiles.push(new Projectile(player.x, player.y, 5, 'white', velocity)); //create a new projectile with the passed on values
 
 });
 
